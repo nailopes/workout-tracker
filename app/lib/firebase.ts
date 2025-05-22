@@ -2,12 +2,12 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: 'SUA_API_KEY',
-    authDomain: 'SEU_DOMÍNIO.firebaseapp.com',
-    projectId: 'SEU_PROJECT_ID',
-    storageBucket: 'SEU_BUCKET.appspot.com',
-    messagingSenderId: 'SEU_MESSAGING_ID',
-    appId: 'SEU_APP_ID',
+    apiKey: "AIzaSyAteqFaU3S-euVTVSsbuTUahAObaxlgIHk",
+    authDomain: "workout-project-f73b6.firebaseapp.com",
+    projectId: "workout-project-f73b6",
+    storageBucket: "workout-project-f73b6.firebasestorage.app",
+    messagingSenderId: "193072164151",
+    appId: "1:193072164151:web:a385eef7771d00d816beb2",
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
