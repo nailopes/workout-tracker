@@ -1,20 +1,22 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
-export const saveWorkout = async (uid: string, data: any) => {
+export const loadWorkout = async (uid: string): Promise<any | null> => {
     try {
-        await setDoc(doc(db, 'workouts', uid), data);
-    } catch (err) {
-        console.error('Erro ao salvar no Firebase:', err);
+        const docRef = doc(db, 'workouts', uid);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? docSnap.data() : null;
+    } catch (error) {
+        console.error('Erro ao carregar workout do Firebase:', error);
+        return null;
     }
 };
 
-export const loadWorkout = async (uid: string): Promise<any | null> => {
+export const saveWorkout = async (uid: string, data: any): Promise<void> => {
     try {
-        const docSnap = await getDoc(doc(db, 'workouts', uid));
-        return docSnap.exists() ? docSnap.data() : null;
-    } catch (err) {
-        console.error('Erro ao carregar do Firebase:', err);
-        return null;
+        const docRef = doc(db, 'workouts', uid);
+        await setDoc(docRef, data);
+    } catch (error) {
+        console.error('Erro ao salvar workout no Firebase:', error);
     }
 };

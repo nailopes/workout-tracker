@@ -1,8 +1,6 @@
 'use client';
 
-import VideoPlayer from './VideoPlayer';
-
-interface ExerciseCardProps {
+interface Props {
     id: number;
     name: string;
     sets: number;
@@ -23,8 +21,8 @@ export default function ExerciseCard({
     rest,
     instructions,
     videoUrl,
-    onDelete
-}: ExerciseCardProps) {
+    onDelete,
+}: Props) {
     return (
         <div className="bg-white rounded-xl shadow-md p-4 space-y-2">
             <div className="flex justify-between items-center">
@@ -39,7 +37,9 @@ export default function ExerciseCard({
             <p className="text-gray-700 text-sm">Weight: {weight}</p>
             <p className="text-gray-700 text-sm">Rest: {rest}s</p>
             <p className="text-gray-600 italic text-sm">{instructions}</p>
-            {videoUrl && <VideoPlayer src={videoUrl} title={name} />}
+            {videoUrl && (
+                <video src={videoUrl} controls className="w-full mt-2 rounded" />
+            )}
         </div>
     );
 }

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 
 export interface NewExercise {
@@ -18,7 +17,7 @@ interface Props {
 }
 
 export default function AddExerciseForm({ onAdd, onCancel }: Props) {
-    const [newExercise, setNewExercise] = useState<NewExercise>({
+    const [form, setForm] = useState<NewExercise>({
         name: '',
         sets: 3,
         reps: 10,
@@ -28,80 +27,26 @@ export default function AddExerciseForm({ onAdd, onCancel }: Props) {
         videoUrl: '',
     });
 
-    const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            setNewExercise((prev) => ({ ...prev, videoUrl: url }));
-        }
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
     };
 
     return (
-        <div className="bg-blue-50 p-4 rounded-lg shadow-inner">
-            <h3 className="text-lg font-semibold mb-4">Add New Exercise</h3>
+        <div className="bg-gray-50 p-4 rounded-md mb-6">
+            <h3 className="text-lg font-medium mb-3">Add New Exercise</h3>
             <div className="grid md:grid-cols-2 gap-4">
-                <input
-                    type="text"
-                    placeholder="Exercise name"
-                    value={newExercise.name}
-                    onChange={(e) => setNewExercise({ ...newExercise, name: e.target.value })}
-                    className="border p-2 rounded-md w-full"
-                />
-                <input
-                    type="text"
-                    placeholder="Weight (e.g. 20kg, bodyweight)"
-                    value={newExercise.weight}
-                    onChange={(e) => setNewExercise({ ...newExercise, weight: e.target.value })}
-                    className="border p-2 rounded-md w-full"
-                />
-                <input
-                    type="number"
-                    placeholder="Sets"
-                    value={newExercise.sets}
-                    onChange={(e) => setNewExercise({ ...newExercise, sets: parseInt(e.target.value) })}
-                    className="border p-2 rounded-md w-full"
-                />
-                <input
-                    type="number"
-                    placeholder="Reps"
-                    value={newExercise.reps}
-                    onChange={(e) => setNewExercise({ ...newExercise, reps: parseInt(e.target.value) })}
-                    className="border p-2 rounded-md w-full"
-                />
-                <input
-                    type="number"
-                    placeholder="Rest (sec)"
-                    value={newExercise.rest}
-                    onChange={(e) => setNewExercise({ ...newExercise, rest: parseInt(e.target.value) })}
-                    className="border p-2 rounded-md w-full"
-                />
-                <input
-                    type="file"
-                    accept="video/mp4"
-                    onChange={handleVideoUpload}
-                    className="border p-2 rounded-md w-full"
-                />
-                <textarea
-                    placeholder="Instructions"
-                    value={newExercise.instructions}
-                    onChange={(e) => setNewExercise({ ...newExercise, instructions: e.target.value })}
-                    className="border p-2 rounded-md w-full md:col-span-2"
-                    rows={2}
-                />
+                <input name="name" placeholder="Exercise Name" className="border p-2 rounded" onChange={handleChange} />
+                <input name="sets" type="number" placeholder="Sets" className="border p-2 rounded" onChange={handleChange} />
+                <input name="reps" type="number" placeholder="Reps" className="border p-2 rounded" onChange={handleChange} />
+                <input name="weight" placeholder="Weight (e.g. 20kg, bodyweight)" className="border p-2 rounded" onChange={handleChange} />
+                <input name="rest" type="number" placeholder="Rest (seconds)" className="border p-2 rounded" onChange={handleChange} />
+                <input name="videoUrl" placeholder="Video URL (MP4 or local)" className="border p-2 rounded" onChange={handleChange} />
+                <textarea name="instructions" placeholder="Instructions" className="border p-2 rounded md:col-span-2" rows={2} onChange={handleChange} />
             </div>
-            <div className="mt-4 flex gap-2 justify-end">
-                <button
-                    onClick={onCancel}
-                    className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={() => onAdd(newExercise)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                >
-                    Add Exercise
-                </button>
+            <div className="mt-4 flex justify-end gap-2">
+                <button onClick={onCancel} className="px-4 py-2 bg-gray-300 rounded-md">Cancel</button>
+                <button onClick={() => onAdd(form)} className="px-4 py-2 bg-blue-600 text-white rounded-md">Add</button>
             </div>
         </div>
     );

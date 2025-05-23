@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import AddExerciseForm from './AddExerciseForm';
 import type { NewExercise } from './AddExerciseForm';
-import VideoPlayer from './VideoPlayer';
-import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
 import ExerciseList from './ExerciseList';
+import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
 
 interface Exercise {
     id: number;
@@ -45,22 +44,28 @@ export default function WorkoutTracker() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const saved = await loadWorkout('naiara@example.com');
-            if (saved) setWorkouts(saved);
-            setHydrated(true);
+            try {
+                const saved = await loadWorkout('naiara@example.com');
+                if (saved) setWorkouts(saved);
+            } catch (err) {
+                console.error('Erro ao carregar workout:', err);
+            } finally {
+                setHydrated(true);
+            }
         };
-
         fetchData();
     }, []);
 
-    if (!hydrated) return null;
-
     useEffect(() => {
-        if (hydrated) saveWorkout('naiara@example.com', workouts);
-        setSaveMessage('Workout saved!');
-        const timeout = setTimeout(() => setSaveMessage(''), 3000);
-        return () => clearTimeout(timeout);
+        if (hydrated) {
+            saveWorkout('naiara@example.com', workouts);
+            setSaveMessage('Workout saved!');
+            const timeout = setTimeout(() => setSaveMessage(''), 3000);
+            return () => clearTimeout(timeout);
+        }
     }, [workouts]);
+
+    if (!hydrated) return null;
 
     const handleAddExercise = (newExercise: NewExercise) => {
         const updated = { ...workouts };
@@ -75,6 +80,7 @@ export default function WorkoutTracker() {
         setWorkouts(updated);
         setShowForm(false);
     };
+
     const handleDeleteExercise = (exerciseId: number) => {
         const updated = { ...workouts };
         updated[selectedWorkout][selectedDay] = updated[selectedWorkout][selectedDay].filter(
@@ -83,7 +89,6 @@ export default function WorkoutTracker() {
         setWorkouts(updated);
     };
 
-
     return (
         <div className="p-6 max-w-5xl mx-auto">
             <header className="flex justify-between items-center mb-6">
@@ -91,7 +96,6 @@ export default function WorkoutTracker() {
                 {saveMessage && <span className="text-green-600 text-sm">{saveMessage}</span>}
             </header>
 
-            {/* Workout + Day selectors */}
             <div className="grid md:grid-cols-2 gap-4 mb-6">
                 <select
                     value={selectedWorkout}
@@ -113,7 +117,6 @@ export default function WorkoutTracker() {
                 </select>
             </div>
 
-            {/* Add Exercise Form */}
             {showForm ? (
                 <AddExerciseForm onAdd={handleAddExercise} onCancel={() => setShowForm(false)} />
             ) : (
@@ -125,7 +128,6 @@ export default function WorkoutTracker() {
                 </button>
             )}
 
-            {/* Exercise List */}
             <ExerciseList
                 exercises={workouts[selectedWorkout][selectedDay]}
                 onDelete={handleDeleteExercise}
