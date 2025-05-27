@@ -2,20 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import AddExerciseForm from './AddExerciseForm';
-import type { NewExercise } from './AddExerciseForm';
 import ExerciseList from './ExerciseList';
 import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
-
-interface Exercise {
-    id: number;
-    name: string;
-    sets: number;
-    reps: number;
-    weight: string;
-    rest: number;
-    instructions: string;
-    videoUrl: string;
-}
+import { Exercise, NewExercise } from '@/app/types/Exercice';
 
 type WorkoutData = Record<string, Record<string, Exercise[]>>;
 
@@ -39,6 +28,7 @@ export default function WorkoutTracker() {
     const [selectedWorkout, setSelectedWorkout] = useState('Workout 1');
     const [selectedDay, setSelectedDay] = useState('Day 1');
     const [showForm, setShowForm] = useState(false);
+    const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [saveMessage, setSaveMessage] = useState('');
     const [hydrated, setHydrated] = useState(false);
 
@@ -89,6 +79,20 @@ export default function WorkoutTracker() {
         setWorkouts(updated);
     };
 
+    const handleEditExercise = (updatedExercise: Exercise) => {
+        const updated = { ...workouts };
+        const list = updated[selectedWorkout][selectedDay];
+
+        updated[selectedWorkout][selectedDay] = list.map((ex) =>
+            ex.id === updatedExercise.id ? updatedExercise : ex
+        );
+
+        setWorkouts(updated);
+        setEditingExercise(null);
+        setShowForm(false);
+    };
+
+
     return (
         <div className="p-6 max-w-5xl mx-auto">
             <header className="flex justify-between items-center mb-6">
@@ -117,21 +121,41 @@ export default function WorkoutTracker() {
                 </select>
             </div>
 
-            {showForm ? (
-                <AddExerciseForm onAdd={handleAddExercise} onCancel={() => setShowForm(false)} />
-            ) : (
+            {showForm && (
+                <AddExerciseForm
+                    onAdd={editingExercise ? handleEditExercise : handleAddExercise}
+                    onCancel={() => {
+                        setShowForm(false);
+                        setEditingExercise(null);
+                    }}
+                    initialData={editingExercise ?? undefined}
+                />
+
+
+            )}
+
+            <div className="flex justify-end mb-4">
                 <button
-                    onClick={() => setShowForm(true)}
-                    className="mb-6 bg-blue-600 text-white px-4 py-2 rounded-md"
+                    onClick={() => {
+                        setShowForm(true);
+                        setEditingExercise(null);
+                    }}
+                    className="px-4 py-2 bg-blue-700 text-white rounded-md"
                 >
                     + Add Exercise
                 </button>
-            )}
+            </div>
 
             <ExerciseList
                 exercises={workouts[selectedWorkout][selectedDay]}
                 onDelete={handleDeleteExercise}
+                onEdit={(exercise) => {
+                    setEditingExercise(exercise);
+                    setShowForm(true);
+                }}
             />
+
+
         </div>
     );
 }

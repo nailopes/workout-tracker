@@ -1,25 +1,24 @@
 'use client';
 import ExerciseCard from './ExerciseCard';
+import { Exercise } from '@/app/types/Exercice';
 
-interface Props {
-    exercises: Array<{
-        id: number;
-        name: string;
-        sets: number;
-        reps: number;
-        weight: string;
-        rest: number;
-        instructions: string;
-        videoUrl: string;
-    }>;
+interface ExerciseListProps {
+    exercises: Exercise[];
     onDelete: (id: number) => void;
+    onEdit: (exercise: Exercise) => void;
 }
 
-export default function ExerciseList({ exercises, onDelete }: Props) {
+
+export default function ExerciseList({ exercises, onDelete, onEdit }: ExerciseListProps) {
     return (
         <div className="space-y-4">
-            {exercises.map((ex) => (
-                <ExerciseCard key={ex.id} {...ex} onDelete={onDelete} />
+            {exercises.map((exercise) => (
+                <ExerciseCard
+                    key={exercise.id}
+                    {...exercise}
+                    onDelete={onDelete}
+                    onEdit={onEdit}
+                />
             ))}
         </div>
     );
