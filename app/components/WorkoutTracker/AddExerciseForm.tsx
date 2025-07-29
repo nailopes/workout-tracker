@@ -13,10 +13,10 @@ export default function AddExerciseForm({ onAdd, onCancel, initialData }: AddExe
         initialData ?? {
             id: 0,
             name: '',
-            sets: 3,
+            sets: '',
             reps: '',
             weight: '',
-            rest: 60,
+            rest: '',
             instructions: '',
             videoUrl: '',
         }

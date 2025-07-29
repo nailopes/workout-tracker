@@ -1,10 +1,10 @@
 export interface Exercise {
     id: number;
     name: string;
-    sets: number;
+    sets: string;
     reps: string;
     weight: string;
-    rest: number;
+    rest: string;
     instructions: string;
     videoUrl?: string;
 }

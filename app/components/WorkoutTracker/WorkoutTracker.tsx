@@ -5,6 +5,8 @@ import AddExerciseForm from './AddExerciseForm';
 import ExerciseList from './ExerciseList';
 import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
 import { Exercise, NewExercise } from '@/app/types/Exercice';
+import useAuth from '@/app/hooks/useAuth';
+
 
 type WorkoutData = Record<string, Record<string, Exercise[]>>;
 
@@ -31,11 +33,13 @@ export default function WorkoutTracker() {
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [saveMessage, setSaveMessage] = useState('');
     const [hydrated, setHydrated] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const saved = await loadWorkout('naiara@example.com');
+                if (!user?.email) return;
+                const saved = await loadWorkout(user.email); // 👈 use current user's email
                 if (saved) setWorkouts(saved);
             } catch (err) {
                 console.error('Erro ao carregar workout:', err);
@@ -44,16 +48,16 @@ export default function WorkoutTracker() {
             }
         };
         fetchData();
-    }, []);
+    }, [user]);
 
     useEffect(() => {
-        if (hydrated) {
-            saveWorkout('naiara@example.com', workouts);
+        if (hydrated && user?.email) {
+            saveWorkout(user.email, workouts);
             setSaveMessage('Workout saved!');
             const timeout = setTimeout(() => setSaveMessage(''), 3000);
             return () => clearTimeout(timeout);
         }
-    }, [workouts]);
+    }, [workouts, hydrated, user]);
 
     if (!hydrated) return null;
 

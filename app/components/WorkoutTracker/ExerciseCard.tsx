@@ -9,10 +9,10 @@ import { Exercise } from '@/app/types/Exercice';
 interface ExerciseCardProps {
     id: number;
     name: string;
-    sets: number;
+    sets: string;
     reps: string;
     weight: string;
-    rest: number;
+    rest: string;
     instructions: string;
     videoUrl?: string;
     onDelete?: (id: number) => void;
