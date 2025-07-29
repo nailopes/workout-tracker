@@ -7,7 +7,7 @@ import { Exercise } from '@/app/types/Exercice';
 
 
 interface ExerciseCardProps {
-    id: number;
+    id: string;
     name: string;
     sets: string;
     reps: string;
@@ -15,7 +15,7 @@ interface ExerciseCardProps {
     rest: string;
     instructions: string;
     videoUrl?: string;
-    onDelete?: (id: number) => void;
+    onDelete?: (id: string) => void;
     onEdit?: (exercise: Exercise) => void;
 }
 

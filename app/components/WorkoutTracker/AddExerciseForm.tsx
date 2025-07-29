@@ -1,26 +1,37 @@
 'use client';
 import { useState } from 'react';
-import { Exercise } from '@/app/types/Exercice';
+import { Exercise, NewExercise } from '@/app/types/Exercice';
 
 interface AddExerciseFormProps {
-    onAdd: (exercise: Exercise) => void;
+    onAdd: (exercise: NewExercise | Exercise) => void;
     onCancel: () => void;
     initialData?: Exercise;
 }
 
+
 export default function AddExerciseForm({ onAdd, onCancel, initialData }: AddExerciseFormProps) {
-    const [formData, setFormData] = useState<Exercise>(
-        initialData ?? {
-            id: 0,
-            name: '',
-            sets: '',
-            reps: '',
-            weight: '',
-            rest: '',
-            instructions: '',
-            videoUrl: '',
-        }
+    const [formData, setFormData] = useState<Omit<NewExercise, 'id'>>(
+        initialData
+            ? {
+                name: initialData.name,
+                sets: initialData.sets,
+                reps: initialData.reps,
+                weight: initialData.weight,
+                rest: initialData.rest,
+                instructions: initialData.instructions,
+                videoUrl: initialData.videoUrl || '',
+            }
+            : {
+                name: '',
+                sets: '',
+                reps: '',
+                weight: '',
+                rest: '',
+                instructions: '',
+                videoUrl: '',
+            }
     );
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

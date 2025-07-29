@@ -4,7 +4,7 @@ import { Exercise } from '@/app/types/Exercice';
 
 interface ExerciseListProps {
     exercises: Exercise[];
-    onDelete: (id: number) => void;
+    onDelete: (id: string) => void;
     onEdit: (exercise: Exercise) => void;
 }
 

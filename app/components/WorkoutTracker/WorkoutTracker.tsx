@@ -4,31 +4,32 @@ import { useState, useEffect } from 'react';
 import AddExerciseForm from './AddExerciseForm';
 import ExerciseList from './ExerciseList';
 import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
-import { Exercise, NewExercise } from '@/app/types/Exercice';
+import { Exercise, NewExercise, WorkoutData } from '@/app/types/Exercice';
 import useAuth from '@/app/hooks/useAuth';
 
-
-type WorkoutData = Record<string, Record<string, Exercise[]>>;
+// 💡 Strict union types for full type safety
+type WorkoutName = 'Workout 1' | 'Workout 2';
+type WorkoutDay = 'Day 1' | 'Day 2' | 'Day 3' | 'Day 4';
 
 const initialWorkout: WorkoutData = {
     'Workout 1': {
-        'Day 1': [],
-        'Day 2': [],
-        'Day 3': [],
-        'Day 4': [],
+        'Day 1': [] as Exercise[],
+        'Day 2': [] as Exercise[],
+        'Day 3': [] as Exercise[],
+        'Day 4': [] as Exercise[],
     },
     'Workout 2': {
-        'Day 1': [],
-        'Day 2': [],
-        'Day 3': [],
-        'Day 4': [],
+        'Day 1': [] as Exercise[],
+        'Day 2': [] as Exercise[],
+        'Day 3': [] as Exercise[],
+        'Day 4': [] as Exercise[],
     },
 };
 
 export default function WorkoutTracker() {
     const [workouts, setWorkouts] = useState<WorkoutData>(initialWorkout);
-    const [selectedWorkout, setSelectedWorkout] = useState('Workout 1');
-    const [selectedDay, setSelectedDay] = useState('Day 1');
+    const [selectedWorkout, setSelectedWorkout] = useState<WorkoutName>('Workout 1');
+    const [selectedDay, setSelectedDay] = useState<WorkoutDay>('Day 1');
     const [showForm, setShowForm] = useState(false);
     const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
     const [saveMessage, setSaveMessage] = useState('');
@@ -38,9 +39,13 @@ export default function WorkoutTracker() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (!user?.email) return;
-                const saved = await loadWorkout(user.email); // 👈 use current user's email
-                if (saved) setWorkouts(saved);
+                if (!user?.uid) return;
+                const saved = await loadWorkout(user.uid);
+                if (saved) {
+                    setWorkouts(saved);
+                } else {
+                    setWorkouts(initialWorkout);
+                }
             } catch (err) {
                 console.error('Erro ao carregar workout:', err);
             } finally {
@@ -51,8 +56,8 @@ export default function WorkoutTracker() {
     }, [user]);
 
     useEffect(() => {
-        if (hydrated && user?.email) {
-            saveWorkout(user.email, workouts);
+        if (hydrated && user?.uid) {
+            saveWorkout(user.uid, workouts);
             setSaveMessage('Workout saved!');
             const timeout = setTimeout(() => setSaveMessage(''), 3000);
             return () => clearTimeout(timeout);
@@ -62,20 +67,14 @@ export default function WorkoutTracker() {
     if (!hydrated) return null;
 
     const handleAddExercise = (newExercise: NewExercise) => {
+        const withId: Exercise = { ...newExercise, id: crypto.randomUUID() };
         const updated = { ...workouts };
-        const nextId = Math.max(
-            ...Object.values(workouts)
-                .flatMap((days) => Object.values(days).flatMap((exs) => exs.map((e) => e.id))),
-            0
-        ) + 1;
-
-        const withId = { ...newExercise, id: nextId };
         updated[selectedWorkout][selectedDay].push(withId);
         setWorkouts(updated);
         setShowForm(false);
     };
 
-    const handleDeleteExercise = (exerciseId: number) => {
+    const handleDeleteExercise = (exerciseId: string) => {
         const updated = { ...workouts };
         updated[selectedWorkout][selectedDay] = updated[selectedWorkout][selectedDay].filter(
             (ex) => ex.id !== exerciseId
@@ -83,19 +82,20 @@ export default function WorkoutTracker() {
         setWorkouts(updated);
     };
 
-    const handleEditExercise = (updatedExercise: Exercise) => {
+    const handleEditExercise = (updatedExercise: NewExercise | Exercise) => {
         const updated = { ...workouts };
         const list = updated[selectedWorkout][selectedDay];
-
         updated[selectedWorkout][selectedDay] = list.map((ex) =>
-            ex.id === updatedExercise.id ? updatedExercise : ex
+            ex.id === (updatedExercise as Exercise).id ? updatedExercise : ex
         );
-
         setWorkouts(updated);
         setEditingExercise(null);
         setShowForm(false);
     };
 
+    const onAdd = editingExercise
+        ? handleEditExercise
+        : (handleAddExercise as (e: NewExercise | Exercise) => void);
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
@@ -107,16 +107,17 @@ export default function WorkoutTracker() {
             <div className="grid md:grid-cols-2 gap-4 mb-6">
                 <select
                     value={selectedWorkout}
-                    onChange={(e) => setSelectedWorkout(e.target.value)}
+                    onChange={(e) => setSelectedWorkout(e.target.value as WorkoutName)}
                     className="p-2 border rounded-md"
                 >
                     {Object.keys(workouts).map((w) => (
                         <option key={w}>{w}</option>
                     ))}
                 </select>
+
                 <select
                     value={selectedDay}
-                    onChange={(e) => setSelectedDay(e.target.value)}
+                    onChange={(e) => setSelectedDay(e.target.value as WorkoutDay)}
                     className="p-2 border rounded-md"
                 >
                     {Object.keys(workouts[selectedWorkout]).map((d) => (
@@ -127,15 +128,13 @@ export default function WorkoutTracker() {
 
             {showForm && (
                 <AddExerciseForm
-                    onAdd={editingExercise ? handleEditExercise : handleAddExercise}
+                    onAdd={onAdd}
                     onCancel={() => {
                         setShowForm(false);
                         setEditingExercise(null);
                     }}
                     initialData={editingExercise ?? undefined}
                 />
-
-
             )}
 
             <div className="flex justify-end mb-4">
@@ -158,8 +157,6 @@ export default function WorkoutTracker() {
                     setShowForm(true);
                 }}
             />
-
-
         </div>
     );
 }

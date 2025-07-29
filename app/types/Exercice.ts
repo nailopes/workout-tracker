@@ -1,5 +1,5 @@
 export interface Exercise {
-    id: number;
+    id: string;
     name: string;
     sets: string;
     reps: string;
@@ -10,3 +10,4 @@ export interface Exercise {
 }
 
 export type NewExercise = Omit<Exercise, 'id'>;
+export type WorkoutData = Record<string, Record<string, Exercise[]>>;
