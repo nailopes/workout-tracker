@@ -4,25 +4,29 @@ import { useState, useEffect } from 'react';
 import AddExerciseForm from './AddExerciseForm';
 import ExerciseList from './ExerciseList';
 import { loadWorkout, saveWorkout } from '@/app/lib/firebaseWorkout';
-import { Exercise, NewExercise, WorkoutData } from '@/app/types/Exercice';
+import { Exercise, NewExercise, WorkoutData, WorkoutDay, WorkoutName } from '@/app/types/Exercice';
 import useAuth from '@/app/hooks/useAuth';
-
-// 💡 Strict union types for full type safety
-type WorkoutName = 'Workout 1' | 'Workout 2';
-type WorkoutDay = 'Day 1' | 'Day 2' | 'Day 3' | 'Day 4';
 
 const initialWorkout: WorkoutData = {
     'Workout 1': {
-        'Day 1': [] as Exercise[],
-        'Day 2': [] as Exercise[],
-        'Day 3': [] as Exercise[],
-        'Day 4': [] as Exercise[],
+        name: 'Workout 1',
+        imageUrl: '/images/workout1.jpg',
+        days: {
+            'Day 1': [],
+            'Day 2': [],
+            'Day 3': [],
+            'Day 4': [],
+        },
     },
     'Workout 2': {
-        'Day 1': [] as Exercise[],
-        'Day 2': [] as Exercise[],
-        'Day 3': [] as Exercise[],
-        'Day 4': [] as Exercise[],
+        name: 'Workout 2',
+        imageUrl: '/images/workout2.jpg',
+        days: {
+            'Day 1': [],
+            'Day 2': [],
+            'Day 3': [],
+            'Day 4': [],
+        },
     },
 };
 
@@ -39,13 +43,9 @@ export default function WorkoutTracker() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                if (!user?.uid) return;
+                if (!user?.email) return;
                 const saved = await loadWorkout(user.uid);
-                if (saved) {
-                    setWorkouts(saved);
-                } else {
-                    setWorkouts(initialWorkout);
-                }
+                setWorkouts(saved ?? initialWorkout);
             } catch (err) {
                 console.error('Erro ao carregar workout:', err);
             } finally {
@@ -56,7 +56,7 @@ export default function WorkoutTracker() {
     }, [user]);
 
     useEffect(() => {
-        if (hydrated && user?.uid) {
+        if (hydrated && user?.email) {
             saveWorkout(user.uid, workouts);
             setSaveMessage('Workout saved!');
             const timeout = setTimeout(() => setSaveMessage(''), 3000);
@@ -69,24 +69,25 @@ export default function WorkoutTracker() {
     const handleAddExercise = (newExercise: NewExercise) => {
         const withId: Exercise = { ...newExercise, id: crypto.randomUUID() };
         const updated = { ...workouts };
-        updated[selectedWorkout][selectedDay].push(withId);
+
+        updated[selectedWorkout].days[selectedDay].push(withId);
         setWorkouts(updated);
         setShowForm(false);
     };
 
     const handleDeleteExercise = (exerciseId: string) => {
         const updated = { ...workouts };
-        updated[selectedWorkout][selectedDay] = updated[selectedWorkout][selectedDay].filter(
+        updated[selectedWorkout].days[selectedDay] = updated[selectedWorkout].days[selectedDay].filter(
             (ex) => ex.id !== exerciseId
         );
         setWorkouts(updated);
     };
 
-    const handleEditExercise = (updatedExercise: NewExercise | Exercise) => {
+    const handleEditExercise = (updatedExercise: Exercise | NewExercise) => {
         const updated = { ...workouts };
-        const list = updated[selectedWorkout][selectedDay];
-        updated[selectedWorkout][selectedDay] = list.map((ex) =>
-            ex.id === (updatedExercise as Exercise).id ? updatedExercise : ex
+        const list = updated[selectedWorkout].days[selectedDay];
+        updated[selectedWorkout].days[selectedDay] = list.map((ex) =>
+            ex.id === (updatedExercise as Exercise).id ? (updatedExercise as Exercise) : ex
         );
         setWorkouts(updated);
         setEditingExercise(null);
@@ -95,16 +96,12 @@ export default function WorkoutTracker() {
 
     const onAdd = editingExercise
         ? handleEditExercise
-        : (handleAddExercise as (e: NewExercise | Exercise) => void);
+        : (handleAddExercise as (e: Exercise | NewExercise) => void);
 
     return (
-        <div className="p-6 max-w-5xl mx-auto">
-            <header className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-blue-700">🏋️ Workout Tracker</h1>
-                {saveMessage && <span className="text-green-600 text-sm">{saveMessage}</span>}
-            </header>
-
-            <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="max-w-5xl mx-auto px-4 pt-24 pb-12 space-y-6">
+            {/* Dropdowns de treino e dia */}
+            <div className="grid md:grid-cols-2 gap-4">
                 <select
                     value={selectedWorkout}
                     onChange={(e) => setSelectedWorkout(e.target.value as WorkoutName)}
@@ -120,12 +117,13 @@ export default function WorkoutTracker() {
                     onChange={(e) => setSelectedDay(e.target.value as WorkoutDay)}
                     className="p-2 border rounded-md"
                 >
-                    {Object.keys(workouts[selectedWorkout]).map((d) => (
+                    {Object.keys(workouts[selectedWorkout].days).map((d) => (
                         <option key={d}>{d}</option>
                     ))}
                 </select>
             </div>
 
+            {/* Formulário de adicionar/exercício */}
             {showForm && (
                 <AddExerciseForm
                     onAdd={onAdd}
@@ -137,7 +135,8 @@ export default function WorkoutTracker() {
                 />
             )}
 
-            <div className="flex justify-end mb-4">
+            {/* Botão de adicionar */}
+            <div className="flex justify-end">
                 <button
                     onClick={() => {
                         setShowForm(true);
@@ -149,14 +148,20 @@ export default function WorkoutTracker() {
                 </button>
             </div>
 
+            {/* Lista de exercícios */}
             <ExerciseList
-                exercises={workouts[selectedWorkout][selectedDay]}
+                exercises={workouts[selectedWorkout].days[selectedDay]}
                 onDelete={handleDeleteExercise}
                 onEdit={(exercise) => {
                     setEditingExercise(exercise);
                     setShowForm(true);
                 }}
             />
+
+            {/* Mensagem de salvamento */}
+            {saveMessage && (
+                <div className="text-green-600 text-center text-sm">{saveMessage}</div>
+            )}
         </div>
     );
 }
